@@ -1,0 +1,30 @@
+@media (max-width: 1600px) {
+    .nav-mobile{
+        display: none;
+    }
+
+}
+@media (max-width: 967px) {
+    .nav-desk , .main-desk{
+        display: none;
+    }
+    .nav-mobile{
+        display: block;
+    }
+    aside{
+        width: 100% !important;
+    }
+    .chat-body{
+        height: 68vh !important;
+    }
+    .contact-body{
+        height: 68vh !important;
+    }
+    .group-body{
+        height: 68vh !important;
+    }
+    .setting-body{
+        height: 79vh !important;
+    }
+
+}

@@ -11,66 +11,86 @@ use App\Models\GroupChat;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Storage;
+use App\Models\ChatList;
+use App\Models\ChatLists;
 
 class GroupChatController extends Controller
 {
+    // group chat ajax
+    public function groupChatAjax($gpID){
+        $message = GroupChat::select('group_chats.*', 'messages.*')
+        ->rightJoin('messages', 'group_chats.chat_code', 'messages.chat_code')
+        ->where('group_chats.gp_id', $gpID)
+        ->get();
+        return response()->json(['message' => $message]);
+    }
+
+    // reply group chat ajax
+    public function replyGroupChatAjax($replyCode){
+        $replyMessage = Message::select('group_chats.*', 'messages.*')
+        ->leftJoin('group_chats', 'group_chats.chat_code', 'messages.chat_code')
+        ->where('messages.chat_code',$replyCode)->first();
+
+        return response()->json(['replyMessage' => $replyMessage]);
+    }
+
     // create group chat
     public function group(Request $request)
     {
         $key = array_keys($request->toArray());
 
-        if (count($key) >= 14) {
+        if (count($key) >= 13) {
             return back()->with(['exceedMember' => '...']);
         }
 
-        if (count($key) < 5) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
+        if (count($key) < 4) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
             ];
-        } elseif (count($key) < 6) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
+        } elseif (count($key) < 5) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id
             ];
-        } elseif (count($key) < 7) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
+        } elseif (count($key) < 6) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
                 'a_user_id' => $m3->add_user_id
             ];
-        } elseif (count($key) < 8) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
+        } elseif (count($key) < 7) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
                 'a_user_id' => $m3->add_user_id,
                 'b_user_id' => $m4->add_user_id
             ];
-        } elseif (count($key) < 9) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
+        } elseif (count($key) < 8) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -78,15 +98,15 @@ class GroupChatController extends Controller
                 'b_user_id' => $m4->add_user_id,
                 'c_user_id' => $m5->add_user_id
             ];
-        } elseif (count($key) < 10) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
-            $m6 = Contact::where('add_user_id', $key[8])->first();
+        } elseif (count($key) < 9) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
+            $m6 = Contact::where('add_user_id', $key[7])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -95,16 +115,16 @@ class GroupChatController extends Controller
                 'c_user_id' => $m5->add_user_id,
                 'd_user_id' => $m6->add_user_id
             ];
-        } elseif (count($key) < 11) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
-            $m6 = Contact::where('add_user_id', $key[8])->first();
-            $m7 = Contact::where('add_user_id', $key[9])->first();
+        } elseif (count($key) < 10) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
+            $m6 = Contact::where('add_user_id', $key[7])->first();
+            $m7 = Contact::where('add_user_id', $key[8])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -114,17 +134,17 @@ class GroupChatController extends Controller
                 'd_user_id' => $m6->add_user_id,
                 'e_user_id' => $m7->add_user_id
             ];
-        } elseif (count($key) < 12) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
-            $m6 = Contact::where('add_user_id', $key[8])->first();
-            $m7 = Contact::where('add_user_id', $key[9])->first();
-            $m8 = Contact::where('add_user_id', $key[10])->first();
+        } elseif (count($key) < 11) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
+            $m6 = Contact::where('add_user_id', $key[7])->first();
+            $m7 = Contact::where('add_user_id', $key[8])->first();
+            $m8 = Contact::where('add_user_id', $key[9])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -135,18 +155,18 @@ class GroupChatController extends Controller
                 'e_user_id' => $m7->add_user_id,
                 'f_user_id' => $m8->add_user_id
             ];
-        } elseif (count($key) < 13) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
-            $m6 = Contact::where('add_user_id', $key[8])->first();
-            $m7 = Contact::where('add_user_id', $key[9])->first();
-            $m8 = Contact::where('add_user_id', $key[10])->first();
-            $m9 = Contact::where('add_user_id', $key[11])->first();
+        } elseif (count($key) < 12) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
+            $m6 = Contact::where('add_user_id', $key[7])->first();
+            $m7 = Contact::where('add_user_id', $key[8])->first();
+            $m8 = Contact::where('add_user_id', $key[9])->first();
+            $m9 = Contact::where('add_user_id', $key[10])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -158,19 +178,19 @@ class GroupChatController extends Controller
                 'f_user_id' => $m8->add_user_id,
                 'g_user_id' => $m9->add_user_id
             ];
-        } elseif (count($key) < 14) {
-            $m1 = Contact::where('add_user_id', $key[3])->first();
-            $m2 = Contact::where('add_user_id', $key[4])->first();
-            $m3 = Contact::where('add_user_id', $key[5])->first();
-            $m4 = Contact::where('add_user_id', $key[6])->first();
-            $m5 = Contact::where('add_user_id', $key[7])->first();
-            $m6 = Contact::where('add_user_id', $key[8])->first();
-            $m7 = Contact::where('add_user_id', $key[9])->first();
-            $m8 = Contact::where('add_user_id', $key[10])->first();
-            $m9 = Contact::where('add_user_id', $key[11])->first();
-            $m10 = Contact::where('add_user_id', $key[12])->first();
+        } elseif (count($key) < 13) {
+            $m1 = Contact::where('add_user_id', $key[2])->first();
+            $m2 = Contact::where('add_user_id', $key[3])->first();
+            $m3 = Contact::where('add_user_id', $key[4])->first();
+            $m4 = Contact::where('add_user_id', $key[5])->first();
+            $m5 = Contact::where('add_user_id', $key[6])->first();
+            $m6 = Contact::where('add_user_id', $key[7])->first();
+            $m7 = Contact::where('add_user_id', $key[8])->first();
+            $m8 = Contact::where('add_user_id', $key[9])->first();
+            $m9 = Contact::where('add_user_id', $key[10])->first();
+            $m10 = Contact::where('add_user_id', $key[11])->first();
             $data = [
-                'user_id' =>  $request->userId,
+                'user_id' =>  Auth::user()->id,
                 'group_name' => $request->groupName,
                 'fir_user_id' =>  $m1->add_user_id,
                 'sec_user_id' =>  $m2->add_user_id,
@@ -184,32 +204,10 @@ class GroupChatController extends Controller
                 'h_user_id' => $m10->add_user_id
             ];
         }
+
         $groupChat = Group::create($data);
-        $data1 = $this->CallBackGpChatPage1();
-        $data = $this->CallBackGpChatPage($groupChat);
 
-        $people = $data1[0];
-        $contact = $data1[1];
-        $group = $data1[2];
-        $block = $data1[3];
-        $blocked = $data1[4];
-
-        $user    = $data[0];
-        $firUser = $data[1];
-        $secUser = $data[2];
-        $aUser = $data[3];
-        $bUser = $data[4];
-        $cUser = $data[5];
-        $dUser = $data[6];
-        $eUser = $data[7];
-        $fUser = $data[8];
-        $gUser = $data[9];
-        $hUser = $data[10];
-        $message = $data[11];
-        $imageOrder = $data[12];
-        $memberPic = $data[13];
-
-        return view('chat.groupchat', compact('people', 'contact', 'group', 'groupChat', 'message', 'imageOrder', 'user', 'firUser', 'secUser', 'aUser', 'bUser', 'cUser', 'dUser', 'eUser', 'fUser', 'gUser', 'hUser', 'block', 'blocked'));
+        return redirect()->route('group#groupChatPage',$groupChat->id);
     }
 
     // direct group chat page
@@ -224,7 +222,7 @@ class GroupChatController extends Controller
         $contact = $data1[1];
         $group = $data1[2];
         $block = $data1[3];
-        $blocked = $data1[4];
+        $chatlist = $data1[4];
 
         $user = $data[0];
         $firUser = $data[1];
@@ -241,63 +239,85 @@ class GroupChatController extends Controller
         $imageOrder = $data[12];
         $memberPic = $data[13];
 
-        return view('chat.groupchat', compact('people', 'contact', 'group', 'groupChat', 'message', 'imageOrder', 'user', 'firUser', 'secUser', 'aUser', 'bUser', 'cUser', 'dUser', 'eUser', 'fUser', 'gUser', 'hUser', 'blocked', 'block'));
+        return view('chat.groupchat', compact('chatlist','people', 'contact', 'group', 'groupChat', 'message', 'imageOrder', 'user', 'firUser', 'secUser', 'aUser', 'bUser', 'cUser', 'dUser', 'eUser', 'fUser', 'gUser', 'hUser', 'block'));
     }
 
     // group chat message
     public function groupMessage(Request $request)
     {
-        $random = mt_rand(1, 1000000);
-        $chat = [
-            'gp_id' => $request->gpId,
-            'user_id' => $request->userId,
-            'fir_user_id' => $request->firstUser,
-            'chat_code' => $random
-        ];
+        logger($request);
+            $random = mt_rand(1, 1000000);
+            $chat = [
+                'gp_id' => $request->gpID,
+                'user_id' => $request->userId,
+                'fir_user_id' => $request->firstUser,
+                'chat_code' => $random
+            ];
 
-        if (isset($request->secUser)) {
-            $chat['sec_user_id'] = $request->secUser;
-        };
-        if (isset($request->aUser)) {
-            $chat['a_user_id'] = $request->aUser;
-        };
-        if (isset($request->bUser)) {
-            $chat['b_user_id'] = $request->bUser;
-        };
-        if (isset($request->cUser)) {
-            $chat['c_user_id'] = $request->cUser;
-        };
-        if (isset($request->dUser)) {
-            $chat['d_user_id'] = $request->dUser;
-        };
-        if (isset($request->eUser)) {
-            $chat['e_user_id'] = $request->eUser;
-        };
-        if (isset($request->fUser)) {
-            $chat['f_user_id'] = $request->fUser;
-        };
-        if (isset($request->gUser)) {
-            $chat['g_user_id'] = $request->gUser;
-        };
-        if (isset($request->hUser)) {
-            $chat['h_user_id'] = $request->hUser;
-        };
+            if ($request->secUser != 'undefined') {
+                $chat['sec_user_id'] = $request->secUser;
+            };
+            if ($request->aUser != 'undefined') {
+                $chat['a_user_id'] = $request->aUser;
+            };
+            if ($request->bUser != 'undefined') {
+                $chat['b_user_id'] = $request->bUser;
+            };
+            if ($request->cUser != 'undefined') {
+                $chat['c_user_id'] = $request->cUser;
+            };
+            if ($request->dUser != 'undefined') {
+                $chat['d_user_id'] = $request->dUser;
+            };
+            if ($request->eUser != 'undefined') {
+                $chat['e_user_id'] = $request->eUser;
+            };
+            if ($request->fUser != 'undefined') {
+                $chat['f_user_id'] = $request->fUser;
+            };
+            if ($request->gUser != 'undefined') {
+                $chat['g_user_id'] = $request->gUser;
+            };
+            if ($request->hUser != 'undefined') {
+                $chat['h_user_id'] = $request->hUser;
+            };
 
-        $message = [
-            'text' => $request->message,
-            'chat_code' => $random,
-            'reply_chat_code' => $request->replyCode
-        ];
-        if ($request->hasFile('image')) {
-            $fileName = uniqid() . "_" . $request->file('image')->getClientOriginalName();
-            $request->file('image')->storeAs('public', $fileName);
-            $message['image'] = $fileName;
+        if ($request->hasFile('audio')) {
+
+            $fileName = uniqid() . "_" . $request->file('audio')->getClientOriginalName();
+            $request->file('audio')->storeAs('public', $fileName);
+            $message = [
+                'audio' => $fileName,
+                'chat_code' => $random,
+            ];
+            $request->replyCode == 'undefined' ? $message['reply_chat_code'] = null : $message['reply_chat_code'] = $request->replyCode;
+        } else {
+            $request->validate([
+                'file' => 'mimetypes:image/jpeg,image/png,image/jpg,image/gif,video/mp4,video/mpeg,video/quicktime',
+            ]);
+            $message = [
+                'text' => $request->message,
+                'chat_code' => $random,
+            ];
+            $request->replyCode == 'undefined' ? $message['reply_chat_code'] = null : $message['reply_chat_code'] = $request->replyCode;
+            $request->replyText == 'undefined' ? $message['reply_mes'] = null : $message['reply_mes'] = $request->replyText;
+
+            if ($request->hasFile('file')) {
+                $fileName = uniqid() . "_" . $request->file('file')->getClientOriginalName();
+                $request->file('file')->storeAs('public', $fileName);
+                if($request->file('file')->getMimeType() == "image/jpeg" || $request->file('file')->getMimeType() == "image/jpg" || $request->file('file')->getMimeType() == "image/png" || $request->file('file')->getMimeType() == "image/webp"){
+                    $message['image'] = $fileName;
+                }
+                if($request->file('file')->getMimeType() == "video/mp4" || $request->file('file')->getMimeType() == "video/mpeg" || $request->file('file')->getMimeType() == "video/ogg" || $request->file('file')->getMimeType() == "video/webm"){
+                    $message['video'] = $fileName;
+                }
+            }
         }
 
         GroupChat::create($chat);
         Message::create($message);
 
-        return redirect()->route('group#groupChatPage', $request->gpId);
+        return response()->json(['success' => 'success']);
     }
 
     // change group profile
@@ -313,8 +333,6 @@ class GroupChatController extends Controller
         $folderPath = public_path('storage/');
 
         $image_parts = explode(";base64,", $request->image); // data:image/png
-        $image_type_aux = explode("image/", $image_parts[0]);
-        $image_type = $image_type_aux[1];       // png
         $image_base64 = base64_decode($image_parts[1]);
 
         $imageName = uniqid() . '.png';
@@ -343,15 +361,7 @@ class GroupChatController extends Controller
     {
         Group::where('id', $id)->delete();
 
-        $data1 = $this->CallBackGpChatPage1();
-
-        $people = $data1[0];
-        $contact = $data1[1];
-        $group = $data1[2];
-        $block = $data1[3];
-        $blocked = $data1[4];
-
-        return view('dashboard', compact('people', 'contact', 'group', 'block', 'blocked'));
+        return redirect()->route('dashboard');
     }
 
     // group leave
@@ -395,14 +405,16 @@ class GroupChatController extends Controller
         $block = $data1[3];
         $blocked = $data1[4];
 
-        return view('dashboard', compact('people', 'contact', 'group', 'block', 'blocked'));
+        return redirect()->route('dashboard');
     }
 
     // add member
     public function groupAddMember(Request $request)
     {
         $key = array_keys($request->toArray());
-
+        if(count($key) < 3){
+            return back()->with(['errorselect' => 'select member']);
+        }
         $member = Group::where('id', $request->gpID)->first();
 
         if ($member->sec_user_id == null) {
@@ -986,15 +998,35 @@ class GroupChatController extends Controller
     // group chat message delete
     public function groupMessageDelete($code)
     {
-        Message::where('chat_code', $code)->update(['text' => null]);
-        return back();
+        $m = Message::where('chat_code', $code)->first();
+        if ($m->audio != null) {
+            Message::where('chat_code', $code)->update(['audio' => null]);
+        } elseif ($m->image != null && $m->text != null) {
+            Message::where('chat_code', $code)->update([
+                'text' => null,
+                'image' => null
+            ]);
+        }  elseif ($m->video != null && $m->text != null) {
+            Message::where('chat_code', $code)->update([
+                'text' => null,
+                'video' => null
+            ]);
+        } elseif ($m->image != null) {
+            Message::where('chat_code', $code)->update(['image' => null]);
+        } elseif ($m->video != null) {
+            Message::where('chat_code', $code)->update(['video' => null]);
+        } elseif ($m->text != null) {
+            Message::where('chat_code', $code)->update(['text' => null]);
+        }
+
+        return response()->json(['success' => 'success']);
     }
 
     // chat message par delete
     public function groupMessageDeletePar($code)
     {
         Message::where('chat_code', $code)->delete();
-        return back();
+        return response()->json(['success' => 'success']);
     }
 
     // group chat message reply
@@ -1004,70 +1036,44 @@ class GroupChatController extends Controller
             ->leftJoin('messages', 'group_chats.chat_code', 'messages.chat_code')
             ->where('group_chats.chat_code', $code)->first();
 
-        $groupChat = Group::where('id', $reply->gp_id)->first();
-
-        $data1 = $this->CallBackGpChatPage1();
-        $data = $this->CallBackGpChatPage($groupChat);
-
-        $people = $data1[0];
-        $contact = $data1[1];
-        $group = $data1[2];
-        $block = $data1[3];
-        $blocked = $data1[4];
-
-        $user = $data[0];
-        $firUser = $data[1];
-        $secUser = $data[2];
-        $aUser = $data[3];
-        $bUser = $data[4];
-        $cUser = $data[5];
-        $dUser = $data[6];
-        $eUser = $data[7];
-        $fUser = $data[8];
-        $gUser = $data[9];
-        $hUser = $data[10];
-        $message = $data[11];
-        $imageOrder = $data[12];
-        $memberPic = $data[13];
-
-        return view('chat.groupchat', compact('reply', 'people', 'contact', 'group', 'groupChat', 'message', 'imageOrder', 'user', 'firUser', 'secUser', 'aUser', 'bUser', 'cUser', 'dUser', 'eUser', 'fUser', 'gUser', 'hUser', 'block', 'blocked'));
+        return response()->json(['reply' => $reply]);
     }
 
     // group message seen
-    public function groupSeen(Request $request)
+    public function groupSeen($gpID)
     {
-        if (GroupChat::where('gp_id', $request->gpID)->where('fir_user_id', Auth::user()->id)->first()) {
-            $data = ['fir_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('fir_user_id', Auth::user()->id)->first()) {
+            $seen = ['fir_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('sec_user_id', Auth::user()->id)->first()) {
-            $data = ['sec_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('sec_user_id', Auth::user()->id)->first()) {
+            $seen = ['sec_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('a_user_id', Auth::user()->id)->first()) {
-            $data = ['a_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('a_user_id', Auth::user()->id)->first()) {
+            $seen = ['a_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('b_user_id', Auth::user()->id)->first()) {
-            $data = ['b_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('b_user_id', Auth::user()->id)->first()) {
+            $seen = ['b_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('c_user_id', Auth::user()->id)->first()) {
-            $data = ['c_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('c_user_id', Auth::user()->id)->first()) {
+            $seen = ['c_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('d_user_id', Auth::user()->id)->first()) {
-            $data = ['d_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('d_user_id', Auth::user()->id)->first()) {
+            $seen = ['d_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('e_user_id', Auth::user()->id)->first()) {
-            $data = ['e_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('e_user_id', Auth::user()->id)->first()) {
+            $seen = ['e_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('f_user_id', Auth::user()->id)->first()) {
-            $data = ['f_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('f_user_id', Auth::user()->id)->first()) {
+            $seen = ['f_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('g_user_id', Auth::user()->id)->first()) {
-            $data = ['g_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('g_user_id', Auth::user()->id)->first()) {
+            $seen = ['g_status' => 'seen'];
         }
-        if (GroupChat::where('gp_id', $request->gpID)->where('h_user_id', Auth::user()->id)->first()) {
-            $data = ['h_status' => 'seen'];
+        if (GroupChat::where('gp_id', $gpID)->where('h_user_id', Auth::user()->id)->first()) {
+            $seen = ['h_status' => 'seen'];
         }
 
-            GroupChat::where('gp_id', $request->gpID)
+            GroupChat::where('gp_id', $gpID)
                 ->orwhere('user_id', Auth::user()->id)
                 ->orwhere('fir_user_id', Auth::user()->id)
                 ->orwhere('sec_user_id', Auth::user()->id)
@@ -1078,7 +1084,7 @@ class GroupChatController extends Controller
                 ->orwhere('e_user_id', Auth::user()->id)
                 ->orwhere('f_user_id', Auth::user()->id)
                 ->orwhere('g_user_id', Auth::user()->id)
-                ->orwhere('h_user_id', Auth::user()->id)->update($data);
+                ->orwhere('h_user_id', Auth::user()->id)->update($seen);
 
     }
 
@@ -1136,14 +1142,13 @@ class GroupChatController extends Controller
             ->orwhere('g_user_id', Auth::user()->id)
             ->orwhere('h_user_id', Auth::user()->id)->get();
 
-        $block = BlockChat::select('block_chats.*', 'users.*')
-            ->leftJoin('users', 'block_chats.blocked_id', 'users.id')
-            ->where('block_chats.user_id', Auth::user()->id)->get();
+        $block = BlockChat::where('user_id', Auth::user()->id)->get();
 
-        $blocked = BlockChat::select('block_chats.*', 'users.*')
-            ->leftJoin('users', 'block_chats.blocked_id', 'users.id')
-            ->where('block_chats.blocked_id', Auth::user()->id)->get();
+        $chatlist = ChatLists::select('chat_lists.fir_user_id','chat_lists.sec_user_id','users.*')
+            ->rightJoin('users','chat_lists.sec_user_id','users.id')
+            ->where('chat_lists.fir_user_id',Auth::user()->id)
+            ->get();
 
-        return [$people, $contact, $group, $block, $blocked];
+        return [$people, $contact, $group, $block ,$chatlist];
     }
 }

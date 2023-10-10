@@ -10,6 +10,6 @@ class Message extends Model
     use HasFactory;
 
     protected $fillable = [
-        'chat_code', 'reply_chat_code', 'text', 'image'
+        'chat_code', 'reply_chat_code','reply_mes', 'text', 'image','audio' , 'video'
     ];
 }

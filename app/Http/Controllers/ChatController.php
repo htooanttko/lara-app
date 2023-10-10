@@ -4,12 +4,15 @@ namespace App\Http\Controllers;
 
 use App\Models\BlockChat;
 use App\Models\Chat;
+use App\Models\ChatList;
+use App\Models\ChatLists;
 use App\Models\User;
 use App\Models\Group;
 use App\Models\Contact;
 use App\Models\Message;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use MessageFormatter;
 
 class ChatController extends Controller
 {
@@ -24,9 +27,52 @@ class ChatController extends Controller
         $imageOrder = $data[4];
         $group = $data[5];
         $block = $data[6];
-        $blocked = $data[7];
+        $chatlist = $data[7];
+        if(ChatLists::where('fir_user_id',Auth::user()->id)->where('sec_user_id',$id)->first() == null){
+            ChatLists::create([
+                'fir_user_id' => Auth::user()->id,
+                'sec_user_id' => $id
+            ]);
+        };
 
-        return view('chat.chat', compact('people', 'contact', 'chat', 'message', 'imageOrder', 'group','block','blocked'));
+        return view('chat.chat', compact('people','chatlist', 'contact', 'chat', 'message', 'imageOrder', 'group', 'block'));
+    }
+
+    // chat ajax
+    public function chatAjax($id){
+        $message = Chat::select('chats.*', 'messages.*')
+        ->rightJoin('messages', 'chats.chat_code', 'messages.chat_code')
+        ->where('chats.sec_user_id', $id)
+        ->orwhere('chats.fir_user_id', $id)
+        ->get();
+
+        return response()->json(['message' => $message]);
+    }
+
+    // chat message search
+    public function chatMessageSearch(){
+        $searchMessage = Message::select('chats.*', 'messages.*')
+        ->leftJoin('chats', 'chats.chat_code', 'messages.chat_code')
+        ->when(request('searchMessage'), function ($query) {
+            $query->orWhere('messages.text', 'like', '%' . request('searchMessage') . '%');
+            })
+        ->get();
+        return response()->json(['searchMessage' => $searchMessage]);
+    }
+
+    // remove all conversation
+    public function chatRemoveAllConver($id){
+        Chat::where('fir_user_id',Auth::user()->id)->where('sec_user_id',$id)->delete();
+        return back();
+    }
+
+    // chat reply ajax
+    public function chatReplyAjax($replyCode){
+        $replyMessage = Message::select('chats.*', 'messages.*')
+        ->leftJoin('chats', 'chats.chat_code', 'messages.chat_code')
+        ->where('messages.chat_code',$replyCode)->first();
+
+        return response()->json(['replyMessage' => $replyMessage]);
     }
 
     // remove Chat
@@ -39,29 +85,64 @@ class ChatController extends Controller
     // chat message
     public function chat(Request $request)
     {
-        $random = mt_rand(1, 1000000);
-        $send = [
-            'fir_user_id' => $request->firstUser,
-            'sec_user_id' => $request->secUser,
-            'chat_code' => $random
-        ];
+        if ($request->hasFile('audio')) {
 
-        $messageSend = [
-            'text' => $request->message,
-            'chat_code' => $random,
-            'reply_chat_code' => $request->replyCode
-        ];
+            $random = mt_rand(1, 1000000);
+            $send = [
+                'fir_user_id' => $request->firstUser,
+                'sec_user_id' => $request->secUser,
+                'chat_code' => $random
+            ];
 
-        if ($request->hasFile('image')) {
-            $fileName = uniqid() . "_" . $request->file('image')->getClientOriginalName();
-            $request->file('image')->storeAs('public', $fileName);
-            $messageSend['image'] = $fileName;
+            $fileName = uniqid() . "_" . $request->file('audio')->getClientOriginalName();
+            $request->file('audio')->storeAs('public', $fileName);
+
+            $messageSend = [
+                'audio' => $fileName,
+                'chat_code' => $random,
+            ];
+            $request->replyCode == 'undefined' ? $messageSend['reply_chat_code'] = null : $messageSend['reply_chat_code'] = $request->replyCode;
+
+        } else {
+            $request->validate([
+                'file' => 'mimetypes:image/jpeg,image/png,image/jpg,image/gif,video/mp4,video/mpeg,video/quicktime',
+            ]);
+
+            $random = mt_rand(1, 1000000);
+            $send = [
+                'fir_user_id' => $request->firstUser,
+                'sec_user_id' => $request->secUser,
+                'chat_code' => $random
+            ];
+            $messageSend = [
+                'text' => $request->message,
+                'chat_code' => $random,
+            ];
+            $request->replyCode == 'undefined' ? $messageSend['reply_chat_code'] = null : $messageSend['reply_chat_code'] = $request->replyCode;
+            $request->replyText == 'undefined' ? $messageSend['reply_mes'] = null : $messageSend['reply_mes'] = $request->replyText;
+
+            if ($request->hasFile('file')) {
+                $fileName = uniqid() . "_" . $request->file('file')->getClientOriginalName();
+                $request->file('file')->storeAs('public', $fileName);
+                if($request->file('file')->getMimeType() == "image/jpeg" || $request->file('file')->getMimeType() == "image/jpg" || $request->file('file')->getMimeType() == "image/png" || $request->file('file')->getMimeType() == "image/webp"){
+                    $messageSend['image'] = $fileName;
+                }
+                if($request->file('file')->getMimeType() == "video/mp4" || $request->file('file')->getMimeType() == "video/mpeg" || $request->file('file')->getMimeType() == "video/ogg" || $request->file('file')->getMimeType() == "video/webm"){
+                    $messageSend['video'] = $fileName;
+                }
+            }
+
         }
-
         Chat::create($send);
         Message::create($messageSend);
+       if(ChatLists::where('fir_user_id',$request->secUser)->where('sec_user_id', $request->firstUser)->first() == null){
+            ChatLists::create([
+                'fir_user_id' => $request->secUser,
+                'sec_user_id' => $request->firstUser
+            ]);
+       }
 
-        return redirect()->route('chat#chatPage', $request->secUser);
+       return response()->json(['success' => 'success']);
     }
 
     // chat reply
@@ -71,22 +152,7 @@ class ChatController extends Controller
             ->leftJoin('messages', 'chats.chat_code', 'messages.chat_code')
             ->where('chats.chat_code', $code)->first();
 
-        if (Auth::user()->id == $reply->sec_user_id) {
-            $data = $this->CallBackChatPage($reply->fir_user_id);
-        } else {
-            $data = $this->CallBackChatPage($reply->sec_user_id);
-        }
-
-        $people = $data[0];
-        $contact = $data[1];
-        $chat = $data[2];
-        $message = $data[3];
-        $imageOrder = $data[4];
-        $group = $data[5];
-        $block = $data[6];
-        $blocked = $data[7];
-
-        return view('chat.chat', compact('people', 'contact', 'chat', 'message', 'imageOrder', 'group', 'reply','block','blocked'));
+            return response()->json(['reply' => $reply]);
     }
 
     // chat reply cancel
@@ -98,21 +164,42 @@ class ChatController extends Controller
     // chat message delete
     public function chatMessageDelete($code)
     {
-        Message::where('chat_code', $code)->update(['text'=>null]);
-        return back();
+        $m = Message::where('chat_code', $code)->first();
+        if ($m->audio != null) {
+            Message::where('chat_code', $code)->update(['audio' => null]);
+        } elseif ($m->image != null && $m->text != null) {
+            Message::where('chat_code', $code)->update([
+                'text' => null,
+                'image' => null
+            ]);
+        }  elseif ($m->video != null && $m->text != null) {
+            Message::where('chat_code', $code)->update([
+                'text' => null,
+                'video' => null
+            ]);
+        } elseif ($m->image != null) {
+            Message::where('chat_code', $code)->update(['image' => null]);
+        } elseif ($m->video != null) {
+            Message::where('chat_code', $code)->update(['video' => null]);
+        } elseif ($m->text != null) {
+            Message::where('chat_code', $code)->update(['text' => null]);
+        }
+
+        return response()->json(['success' => 'success']);
     }
 
     // chat message par delete
-    public function chatMessageDeletePar($code){
+    public function chatMessageDeletePar($code)
+    {
         Message::where('chat_code', $code)->delete();
-        $id = Chat::where('chat_code',$code)->first();
 
-        return redirect()->route('chat#chatPage',$id->sec_user_id);
+        return response()->json(['success' => 'success']);
     }
 
-    // chat message seen 
-    public function chatSeen(Request $request){
-        Chat::where('fir_user_id',$request->id)->where('sec_user_id',Auth::user()->id)->update(['status'=>'seen']);
+    // chat message seen
+    public function chatSeen($id)
+    {
+        Chat::where('fir_user_id', $id)->where('sec_user_id', Auth::user()->id)->update(['status' => 'seen']);
     }
 
     // Call back for chat page
@@ -120,8 +207,8 @@ class ChatController extends Controller
     {
         $blockId = BlockChat::pluck('blocked_id');
 
-        $people = User::whereNotIn('id',$blockId)->get();
-        $contact = Contact::select('users.*','contacts.id','contacts.user_id','contacts.add_user_id')
+        $people = User::whereNotIn('id', $blockId)->get();
+        $contact = Contact::select('users.*', 'contacts.id', 'contacts.user_id', 'contacts.add_user_id')
             ->leftJoin('users', 'contacts.add_user_id', 'users.id')
             ->where('contacts.user_id', Auth::user()->id)
             ->get();
@@ -154,16 +241,14 @@ class ChatController extends Controller
             ->orwhere('g_user_id', Auth::user()->id)
             ->orwhere('h_user_id', Auth::user()->id)->get();
 
-        $block = BlockChat::select('block_chats.*','users.*')
-            ->leftJoin('users','block_chats.blocked_id','users.id')
-            ->where('block_chats.user_id',Auth::user()->id)->get();
+        $block = BlockChat::where('user_id', Auth::user()->id)->get();
 
-        $blocked = BlockChat::select('block_chats.*','users.*')
-            ->leftJoin('users','block_chats.blocked_id','users.id')
-            ->where('block_chats.blocked_id',Auth::user()->id)->get();
+        $chatlist = ChatLists::select('chat_lists.fir_user_id','chat_lists.sec_user_id','users.*')
+            ->rightJoin('users','chat_lists.sec_user_id','users.id')
+            ->where('chat_lists.fir_user_id',Auth::user()->id)
+            ->get();
 
-        // dd($blocked->toArray());
 
-        return [$people, $contact, $chat, $message, $imageOrder, $group,$block,$blocked];
+        return [$people, $contact, $chat, $message, $imageOrder, $group, $block ,$chatlist];
     }
 }

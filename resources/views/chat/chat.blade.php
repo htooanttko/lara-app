@@ -5,6 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <link rel="preconnect" href="https://fonts.bunny.net">
+    <link rel="icon" href="{{ asset('image/icons8-leaf-48.png') }}">
 
     {{-- link  --}}
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.2/css/all.min.css"
@@ -14,26 +16,25 @@
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/4.7.0/css/font-awesome.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet"
         integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
-
+        <link rel="stylesheet" href="{{ asset('css/chat.css') }}">
+        <link rel="stylesheet" href="{{ asset('css/light_dark.css') }}">
     <style>
-        #scroll::-webkit-scrollbar {
+        #displayDetailFile::-webkit-scrollbar {
             display: none;
         }
-
-        #detailScroll::-webkit-scrollbar {
+        .displaySearchMessage::-webkit-scrollbar {
             display: none;
         }
-
-        #contactScroll::-webkit-scrollbar {
+        .blockedacc::-webkit-scrollbar {
             display: none;
         }
-
-        #groupScroll::-webkit-scrollbar {
-            display: none;
-        }
-
-        .findPeople::-webkit-scrollbar {
-            display: none;
+        .preview {
+            text-align: center;
+            overflow: hidden;
+            width: 160px;
+            height: 160px;
+            margin: auto;
+            border: 2px solid #536dfe;
         }
 
         .emoji-picker {
@@ -61,195 +62,103 @@
             cursor: pointer;
             font-size: 24px;
         }
+
+        #contactScroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        #groupScroll::-webkit-scrollbar {
+            display: none;
+        }
+
+        .findPeople::-webkit-scrollbar {
+            display: none;
+        }
+
+        body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .chat-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .contact-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .group-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .setting-body::-webkit-scrollbar {
+            display: none;
+        }
+
+        .display-message::-webkit-scrollbar {
+            display: none;
+        }
     </style>
 
     <title>SnapView</title>
 </head>
 
-<body class=" bg-dark">
-    @include('nav & body.nav')
-    <section>
-        <div class="row container-fluid">
-            <!-- contact section start -->
-            <div class="col-md">
-                <div class="px-3 h-100 mt-2 rounded-3" style="background-color: rgb(51, 51, 51); ">
-                    <div class="text-white fs-3 ps-3 mb-2" style=" border-bottom: 1px solid white;">Contacts</div>
+<body class="row container-fluid">
+    <input type="hidden" id="_token" name="_token" value="{{ csrf_token() }}">
 
-                    <ul class="list-group list-group-flush overflow-auto" id="contactScroll"
-                        style="border-bottom:1px solid black; height:35vh">
-                        @foreach ($contact as $c)
-                            <a href="{{ route('chat#chatPage', $c->add_user_id) }}"
-                                class=" text-decoration-none rounded">
-                                <li class="list-group-item d-flex my-1 text-white border-secondary"
-                                    style="background-color: rgb(51, 51, 51); ">
-                                    <div class="col-3">
+    @include('nav_&_aside')
 
-                                        @if ($c->image == null)
-                                            <img src="{{ asset('image/defaultpic.jpg') }}" alt=""
-                                                class=" w-100 rounded-circle">
-                                        @else
-                                            <img src="{{ asset('storage/' . $c->image) }}" alt=""
-                                                class=" w-100 rounded-circle">
-                                        @endif
-                                    </div>
+    <main class=" col main-desk-chat">
 
-                                    <div class="  pt-1 ms-3">
-                                        <span class=" d-block">{{ $c->name }}</span>
-                                        @if ($c->status == 'online')
-                                            <small class=" text-white">{{ $c->status }}</small>
-                                        @else
-                                            @if (date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) > 60)
-                                                <small class=" text-white-50">Active
-                                                    {{ date('H') - $c->updated_at->format('H') }}
-                                                    hours ago</small>
-                                            @elseif (date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) == 0)
-                                                <small class=" text-white-50">Active a minute ago
-                                                </small>
-                                            @elseif (date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) > 1140)
-                                                <small class=" text-white-50">Active
-                                                    {{ date('d') - $c->updated_at->format('d') }}
-                                                    days ago</small>
-                                            @elseif (date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) > 43200)
-                                                <small class=" text-white-50">Active
-                                                    {{ date('m') - $c->updated_at->format('m') }}
-                                                    months ago</small>
-                                            @elseif (date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) > 525600)
-                                                <small class=" text-white-50">Active
-                                                    {{ date('Y') - $c->updated_at->format('Y') }}
-                                                    years ago</small>
-                                            @else
-                                                @if ($c->updated_at->format('H') * 60 + $c->updated_at->format('i') <= date('H') * 60 + date('i'))
-                                                    <small class=" text-white-50">Active
-                                                        {{ date('H') * 60 + date('i') - ($c->updated_at->format('H') * 60 + $c->updated_at->format('i')) }}
-                                                        minute ago
-                                                    </small>
-                                                @endif
-                                            @endif
-                                        @endif
-                                    </div>
-                                </li>
-                            </a>
-                        @endforeach
-                    </ul>
+        <div class="chatting-section">
+            <header class=" py-2 d-flex justify-content-between">
+                <a href="{{ route('dashboard') }}" class="backDashboard"><i class=" fa-solid fa-angle-left tex-muted opacity-50"></i></a>
+                <div class="contact-name container">
+                    <div class="row ">
 
-                    <div class="text-white fs-3 ps-3 mb-2 mt-1" style=" border-bottom: 1px solid white;">Groups</div>
-                    <ul class="list-group list-group-flush  overflow-auto" id="groupScroll" style="height:36vh">
-                        @foreach ($group as $g)
-                            <a href="{{ route('group#groupChatPage', $g->id) }}" class=" text-decoration-none rounded">
-                                <li class="list-group-item  d-flex my-1 text-white border-secondary"
-                                    style="background-color: rgb(51, 51, 51); ">
-                                    <div class=" col-3">
-                                        @if ($g->group_image == null)
-                                            <img src="{{ asset('image/defaultpic.jpg') }}" alt=""
-                                                class="w-100 rounded-circle">
-                                        @else
-                                            <img src="{{ asset('storage/' . $g->group_image) }}" alt=""
-                                                class="w-100 rounded-circle">
-                                        @endif
-                                    </div>
-                                    <div class="col pt-1 ms-3">
-                                        <span class=" d-block">{{ $g->group_name }}</span>
-                                        @if (isset($g->sec_user_id) && !isset($g->a_user_id))
-                                            <small class=" text-white-50">3 members</small>
-                                        @endif
-                                        @if (isset($g->a_user_id) && !isset($g->b_user_id))
-                                            <small class=" text-white-50">4 members</small>
-                                        @endif
-                                        @if (isset($g->b_user_id) && !isset($g->c_user_id))
-                                            <small class=" text-white-50">5 members</small>
-                                        @endif
-                                        @if (isset($g->c_user_id) && !isset($g->d_user_id))
-                                            <small class=" text-white-50">6 members</small>
-                                        @endif
-                                        @if (isset($g->d_user_id) && !isset($g->e_user_id))
-                                            <small class=" text-white-50">7 members</small>
-                                        @endif
-                                        @if (isset($g->e_user_id) && !isset($g->f_user_id))
-                                            <small class=" text-white-50">8 members</small>
-                                        @endif
-                                        @if (isset($g->f_user_id) && !isset($g->g_user_id))
-                                            <small class=" text-white-50">9 members</small>
-                                        @endif
-                                        @if (isset($g->g_user_id) && !isset($g->h_user_id))
-                                            <small class=" text-white-50">10 members</small>
-                                        @endif
-                                        @if (isset($g->h_user_id))
-                                            <small class=" text-white-50">11 members</small>
-                                        @endif
-                                    </div>
-                                </li>
-                            </a>
-                        @endforeach
+                        <div class=" mt-2 " style="width: 68px">
+                            {{-- get chat id --}}
+                            <input type="hidden" id="chatID" value="{{ $chat->id }}">
+                            <input type="hidden" id="chatName" value="{{ $chat->name }}">
+                            <input type="hidden" id="AuthID" value="{{ Auth::user()->id }}">
 
-                    </ul>
 
-                </div>
-
-            </div>
-            <!-- contact section end -->
-
-            <!-- chat section start  -->
-            <div class="col-md-7 mt-2 rounded-4" style="background-color:rgb(92, 92, 92); height: 87vh;">
-
-                <input type="hidden" id="id" value="{{ $chat->id }}">
-
-                <div class="col">
-                    <div class="row rounded-top-4" style="height: 65px; background-color: rgb(59, 59, 59);">
-                        <div class=" col-1 pt-2 ms-3">
-
-                            @if (
-                                !in_array($chat->id, $block->pluck('blocked_id')->toArray()) &&
-                                    !in_array($chat->id, $blocked->pluck('user_id')->toArray()))
                                 @if ($chat->image == null)
-                                    <img src="{{ asset('image/defaultpic.jpg') }}"
-                                        class="w-100 rounded-circle shadow-lg" alt="">
+                                    <img src="{{ asset('image/defaultpic.jpg') }}" class="w-100 rounded-circle"
+                                        alt="" id="chatDefImage">
                                 @else
-                                    <img src="{{ asset('storage/' . $chat->image) }}"
-                                        class="w-100 rounded-circle shadow-lg" alt="">
+                                    <img src="{{ asset('storage/' . $chat->image) }}" class="w-100 rounded-circle"
+                                        alt="" id="chatImages">
                                 @endif
-                            @endif
 
-                            @foreach ($block as $b)
-                                @if ($b->blocked_id == $chat->id)
-                                    <img src="{{ asset('image/defaultpic.jpg') }}"
-                                        class="w-100 rounded-circle shadow-lg" alt="">
-                                @endif
-                            @endforeach
-
-                            @foreach ($blocked as $bd)
-                                @if ($bd->user_id == $chat->id)
-                                    <img src="{{ asset('image/defaultpic.jpg') }}"
-                                        class="w-100 rounded-circle shadow-lg" alt="">
-                                @endif
-                            @endforeach
                         </div>
-                        <div class=" col-5 p-2">
-                            <span class=" d-block text-white fs-5">{{ $chat->name }}</span>
+                        <div class="col">
+                            <span class=" fw-bold lightTextClass d-block"> {{ $chat->name }}</span>
                             @if ($chat->status == 'online')
                                 <small class="">{{ $chat->status }}</small>
                             @else
                                 @if (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 60)
-                                    <small class=" text-white-50">Active
+                                    <small class=" lightTextClass">Active
                                         {{ date('H') - $chat->updated_at->format('H') }}
                                         hours ago</small>
                                 @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) == 0)
-                                    <small class=" text-white-50">Active a minute ago
+                                    <small class=" lightTextClass">Active a minute ago
                                     </small>
                                 @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 1140)
-                                    <small class=" text-white-50">Active
+                                    <small class=" lightTextClass">Active
                                         {{ date('d') - $chat->updated_at->format('d') }}
                                         days ago</small>
                                 @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 43200)
-                                    <small class=" text-white-50">Active
+                                    <small class=" lightTextClass">Active
                                         {{ date('m') - $chat->updated_at->format('m') }}
                                         months ago</small>
                                 @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 525600)
-                                    <small class=" text-white-50">Active
+                                    <small class=" lightTextClass">Active
                                         {{ date('Y') - $chat->updated_at->format('Y') }}
                                         years ago</small>
                                 @else
                                     @if ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i') <= date('H') * 60 + date('i'))
-                                        <small class=" text-white-50">Active
+                                        <small class=" lightTextClass">Active
                                             {{ date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) }}
                                             minute ago
                                         </small>
@@ -257,418 +166,209 @@
                                 @endif
                             @endif
                         </div>
-                        <div class=" offset-2 col-3 p-3 text-end">
-                            <div data-bs-toggle="dropdown" aria-haspopup="true" aria-expanded="false">
-                                <i class="fa-solid fa-circle-info fs-4 mt-2 text-white-50"></i>
-                            </div>
-                            <div class="dropdown-menu bg-dark">
-                                <div class=" text-white text-center">
-                                    {{-- Add Group Member --}}
-                                    <!-- Button trigger modal-->
-                                    <a href="{{ route('chat#chatRemove', $chat->id) }}"
-                                        class="btn btn-dark text-start">
-                                        Delete Conversation
-                                    </a>
+                    </div>
+                </div>
+                <div class="set d-flex pt-2">
+                    <i class="fa-solid fa-magnifying-glass mt-1 lightTextClass"  data-bs-toggle="modal" data-bs-target="#searchMessage"></i>
+                    <div class="dropdown">
+                        <i class="fa-solid fa-ellipsis-vertical lightTextClass ps-5 "  data-bs-toggle="dropdown" aria-expanded="false"></i>
+
+                        <ul class="dropdown-menu">
+                        <li style="cursor: pointer"><a class="dropdown-item" data-bs-toggle="modal" data-bs-target="#personalInfo"><small class=" lightTextClass "><i class="fa-solid fa-circle-info me-2 opacity-50"></i>Personal Information</small></a></li>
+                        <li style="cursor: pointer"><a class="dropdown-item" href="{{ route('contact#addContactByid', $chat->id) }}"><small class=" lightTextClass "><i class="fa-regular fa-square-plus me-2 opacity-50"></i>Add Contact</small></a></li>
+                        <li><a class="dropdown-item" href="{{ route('chat#chatRemoveAllConver', $chat->id) }}"><small  class=" text-danger"><i class="fa-regular fa-trash-can me-2"></i>Delete Conversation</small></a></li>
+                        <li><a class="dropdown-item" href="{{ route('chat#block', $chat->id) }}"><small  class=" text-danger"><i class="fa-solid fa-ban me-2"></i>Block Contact</small></a></li>
+                        </ul>
+                    </div>
+                </div>
+
+                {{-- modal for personal infromation  --}}
+                <div class="modal fade" id="personalInfo" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" style="width: 280px">
+                        <div class="modal-content " >
+                            <div id="contactInfo">
+                                <div class="modal-header border-bottom-0">
+                                    <h5 class="col-6 lightTextClass">Contact Info</h5>
+                                    <button type="button" class="btn position-absolute mt-2 me-1 top-0 end-0" data-bs-dismiss="modal"
+                                        aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
-                                <div class=" text-white text-center">
-                                    <a href="{{ route('chat#block', $chat->id) }}" class="btn btn-dark text-start">
-                                        Block Contact
-                                    </a>
+
+                                <div class="modal-body" style="border-bottom: 1px solid #eeeeee">
+                                        <div class="row ">
+                                            <div class=" ms-3 mt-1" style="width: 68px">
+
+                                                    @if ($chat->image == null)
+                                                        <img src="{{ asset('image/defaultpic.jpg') }}" class="w-100 rounded-circle"
+                                                            alt="" id="chatDefImage">
+                                                    @else
+                                                        <img src="{{ asset('storage/' . $chat->image) }}" class="w-100 rounded-circle"
+                                                            alt="" id="chatImage">
+                                                    @endif
+
+                                            </div>
+                                            <div class="col mt-1">
+                                                <span class=" fw-bold lightTextClass d-block"> {{ $chat->name }}</span>
+                                                @if ($chat->status == 'online')
+                                                    <small class=" text-info">{{ $chat->status }}</small>
+                                                @else
+                                                    @if (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 60)
+                                                        <small class=" lightTextClass">Active
+                                                            {{ date('H') - $chat->updated_at->format('H') }}
+                                                            hours ago</small>
+                                                    @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) == 0)
+                                                        <small class=" lightTextClass">Active a minute ago
+                                                        </small>
+                                                    @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 1140)
+                                                        <small class=" lightTextClass">Active
+                                                            {{ date('d') - $chat->updated_at->format('d') }}
+                                                            days ago</small>
+                                                    @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 43200)
+                                                        <small class=" lightTextClass">Active
+                                                            {{ date('m') - $chat->updated_at->format('m') }}
+                                                            months ago</small>
+                                                    @elseif (date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) > 525600)
+                                                        <small class=" lightTextClass">Active
+                                                            {{ date('Y') - $chat->updated_at->format('Y') }}
+                                                            years ago</small>
+                                                    @else
+                                                        @if ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i') <= date('H') * 60 + date('i'))
+                                                            <small class=" lightTextClass">Active
+                                                                {{ date('H') * 60 + date('i') - ($chat->updated_at->format('H') * 60 + $chat->updated_at->format('i')) }}
+                                                                minute ago
+                                                            </small>
+                                                        @endif
+                                                    @endif
+                                                @endif
+                                            </div>
+                                        </div>
+                                </div>
+                                <div class="pt-3 ps-3" style="border-bottom: 1px solid #eeeeee">
+
+                                        <p class="lightTextClass"><i class="fa-solid fa-phone px-3 opacity-50"></i>{{ $chat->phone }}</p>
+                                        <p class="lightTextClass"><i class="fa-solid fa-at px-3 opacity-50"></i>{{ $chat->email }}</p>
+                                        <div class="lightTextClass d-flex " id="sharedMedia"  style="cursor: pointer"><p class="col"><i class="fa-solid fa-share-nodes px-3 opacity-50"></i>Shared Media</p><p class=" pe-4" style="width: 10px"><i class="fa-solid fa-angle-right"></i></p></div>
+
+
+                                </div>
+                                <div class="pt-3 ps-3">
+                                        <a href="{{ route('chat#block', $chat->id) }}" class=" text-decoration-none">
+                                            <p class="text-danger"><i class="fa-solid fa-ban px-3"></i>block contact</p>
+                                        </a>
+                                        <a href="{{ route('chat#chatRemove', $chat->id) }}"  class=" text-decoration-none">
+                                            <p class="text-danger"><i class="fa-regular fa-trash-can  px-3"></i>delete contact</p>
+                                        </a>
+                                </div>
+                            </div>
+
+                            <div  id="displaySharedMedia" style="display: none"  >
+                                <div class="modal-header border-bottom-0">
+                                    <h5 class="col-8 lightTextClass">Shared Media</h5>
+                                    <button type="button" class="btn position-absolute mt-2 me-1 top-0 end-0" id="backDetail"><i class="fa-solid fa-angles-left opacity-50"></i></button>
+                                </div>
+                                <div class="modal-body overflow-y-scroll d-grid" id="displayDetailFile"  style="height: 45vh;grid-template-columns:auto auto auto;">
+                                    @if (isset($imageOrder->image,$imageOrder->video))
+                                    @foreach ($imageOrder as $io)
+                                        @if ($io->image != null)
+                                            <div class="p-1  overflow-hidden" style="width: 82px; height:70px">
+                                                <img src="{{ asset('storage/'.$io->image) }}" class="w-100" id="detailImage" alt="">
+                                            </div>
+
+                                        @elseif ($io->video != null)
+                                            <div  class="p-1 position-relative overflow-hidden" style="width: 82px;height:70px" >
+                                                <video class=" w-100">
+                                                    <source src="{{ asset('storage/'.$io->video) }}">
+                                                </video>
+                                                <i class="fa-solid fa-circle-play position-absolute text-white fs-6"
+                                                style="top: 38%; left: 40%"></i>
+                                            </div>
+
+                                        @endif
+                                    @endforeach
+                                    @else
+                                        <div class=" text-center mt-5 ms-2 lightTextClass">
+                                            <p class=" fw-bold">No Media</p>
+                                            <p>No media in this conversations</p>
+                                        </div>
+                                    @endif
                                 </div>
                             </div>
                         </div>
                     </div>
                 </div>
-
-                {{-- display message start  --}}
-                <div class=" overflow-auto" id="scroll" style=" height: 80%; -webkit-overflow-scrolling: none">
-                    @foreach ($message as $m)
-                        @if (Auth::user()->id == $m->fir_user_id)
-                            <div class="offset-6 col-6">
-                                @if ($m->text == null && $m->image == null)
-                                    <div class="clickToReply">
-                                        <div
-                                            class=" form-control rounded-5 border-1 border-secondary  bg-secondary p-1 mt-4 text-white-50 text-end d-inline-block pe-4 shadow">
-                                            You removed message
-                                            <div class=" text-start ps-3 text-white-50">
-                                                {{ $m->created_at->format('H:i A') }}
-                                            </div>
-                                        </div>
-                                        <div class="reply" style=" display:none">
-                                            <a href="{{ route('chat#chatMessageDeletePar', $m->chat_code) }}"><i
-                                                    class="fa-solid fa-trash  opacity-50 text-dark"></i></a>
-                                        </div>
-                                    </div>
-                                @else
-                                    @if ($m->image == null)
-                                        <div class="clickToReply">
-                                            <div
-                                                class=" form-control rounded-5 bg-dark border-0 p-1 mt-4 text-white text-end d-inline-block pe-4 shadow">
-                                                @if ($m->reply_chat_code != null)
-                                                    <div class=" opacity-25 text-start ms-3 border-bottom border-2"><i
-                                                            class="fa-solid fa-reply pe-2 pt-3 text-white-50 "></i>
-                                                        @foreach ($message as $mg)
-                                                            @if ($mg->chat_code == $m->reply_chat_code)
-                                                                @if ($mg->text == null && $mg->image == null)
-                                                                    <span class=" text-danger">Deleted Message</span>
-                                                                @else
-                                                                    @if ($mg->image != null)
-                                                                        <div class="col-2 offset-1 mb-2">
-                                                                            <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                class="w-100 opacity-50 rounded-2 shadow"
-                                                                                alt="">
-                                                                        </div>
-                                                                    @else
-                                                                        {{ $mg->text }}
-                                                                    @endif
-                                                                @endif
-                                                            @endif
-                                                        @endforeach
-                                                    </div>
-                                                @endif
-                                                {{ $m->text }}
-                                                <div class=" text-start ps-3 text-white-50">
-                                                    @if ($m->status == 'sent')
-                                                        <i class="fa-regular fa-circle-check px-2"></i>
-                                                    @else
-                                                        <i class="fa-solid fa-circle-check px-2"></i>
-                                                    @endif
-                                                    {{ $m->created_at->format('H:i A') }}
-                                                </div>
-                                            </div>
-                                            <div class="reply" style=" display:none">
-                                                <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                        class="fa-solid fa-reply opacity-50 text-dark"></i></a>
-                                                <a href="{{ route('chat#chatMessageDelete', $m->chat_code) }}"><i
-                                                        class="fa-solid fa-trash  opacity-50 text-dark"></i></a>
-                                            </div>
-                                        </div>
-                                    @else
-                                        @if ($m->text == null)
-                                            <div class="clickToReply">
-                                                <div class=" mt-4 ">
-                                                    @if ($m->reply_chat_code != null)
-                                                        <div class=" opacity-50 text-start ms-3 rounded-5 border-2"><i
-                                                                class="fa-solid fa-reply pe-2 pt-3"></i>
-                                                            @foreach ($message as $mg)
-                                                                @if ($mg->chat_code == $m->reply_chat_code)
-                                                                    @if ($mg->text == null && $mg->image == null)
-                                                                        <span class=" text-danger">Deleted
-                                                                            Message</span>
-                                                                    @else
-                                                                        @if ($mg->image != null)
-                                                                            <div class="col-2 offset-1 mb-2">
-                                                                                <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                    class="w-100 opacity-50 rounded-2 shadow"
-                                                                                    alt="">
-                                                                            </div>
-                                                                        @else
-                                                                            {{ $mg->text }}
-                                                                        @endif
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-
-                                                    <div class=" position-relative">
-                                                        <div class=" position-absolute bottom-0 text-white-50">
-                                                            @if ($m->status == 'sent')
-                                                                <i
-                                                                    class="fa-regular fa-circle-check px-2 mb-2 ms-2"></i>
-                                                                {{ $m->created_at->format('H:i A') }}
-                                                            @else
-                                                                <i class="fa-solid fa-circle-check px-2 mb-2 ms-2"></i>
-                                                                {{ $m->created_at->format('H:i A') }}
-                                                            @endif
-                                                        </div>
-                                                        <img src="{{ asset('storage/' . $m->image) }}"
-                                                            class=" w-100 rounded-4 shadow-lg" alt="">
-                                                    </div>
-
-                                                </div>
-                                                <div class="reply" style=" display:none">
-                                                    <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-reply  opacity-50 text-dark"></i></a>
-                                                    <a href="{{ route('chat#chatMessageDelete', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-trash  opacity-50 text-dark"></i></a>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div class=" clickToReply">
-                                                <div
-                                                    class="  form-control rounded-5 bg-dark border-0 p-1 mt-4 text-white text-end d-inline-block pe-4 shadow">
-                                                    @if ($m->reply_chat_code != null)
-                                                        <div
-                                                            class=" opacity-25 text-start ms-3 border-bottom border-2">
-                                                            <i class="fa-solid fa-reply pe-2 pt-3 text-white-50"></i>
-                                                            @foreach ($message as $mg)
-                                                                @if ($mg->chat_code == $m->reply_chat_code)
-                                                                    @if ($mg->text == null && $mg->image == null)
-                                                                        <span class=" text-danger">Deleted
-                                                                            Message</span>
-                                                                    @else
-                                                                        @if ($mg->image != null)
-                                                                            <div class="col-2 offset-1 mb-2">
-                                                                                <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                    class="w-100 opacity-50 rounded-2 shadow"
-                                                                                    alt="">
-                                                                            </div>
-                                                                        @else
-                                                                            {{ $mg->text }}
-                                                                        @endif
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                    {{ $m->text }}
-                                                    <div class=" text-start ps-3 text-white-50">
-                                                        @if ($m->status == 'sent')
-                                                            <i class="fa-regular fa-circle-check px-2"></i>
-                                                        @else
-                                                            <i class="fa-solid fa-circle-check px-2"></i>
-                                                        @endif
-                                                        {{ $m->created_at->format('H:i A') }}
-                                                    </div>
-                                                </div>
-                                                <div class=" position-relative">
-                                                    <div class=" position-absolute bottom-0 text-white-50">
-                                                        @if ($m->status == 'sent')
-                                                            <i class="fa-regular fa-circle-check px-2 mb-2 ms-2"></i>
-                                                            {{ $m->created_at->format('H:i A') }}
-                                                        @else
-                                                            <i class="fa-solid fa-circle-check px-2 mb-2 ms-2"></i>
-                                                            {{ $m->created_at->format('H:i A') }}
-                                                        @endif
-                                                    </div>
-                                                    <img src="{{ asset('storage/' . $m->image) }}"
-                                                        class=" w-100 rounded-4 shadow-lg" alt="">
-                                                </div>
-
-                                                <div class="reply" style=" display:none">
-                                                    <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-reply  opacity-50 text-dark"></i></a>
-                                                    <a href="{{ route('chat#chatMessageDelete', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-trash  opacity-50 text-dark"></i></a>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endif
-                                @endif
-
-                            </div>
-                        @elseif (Auth::user()->id == $m->sec_user_id)
-                            <div class="col-7 row">
-                                <div class=" col-2 pt-4">
-                                    @if (
-                                        !in_array($chat->id, $block->pluck('blocked_id')->toArray()) &&
-                                            !in_array($chat->id, $blocked->pluck('user_id')->toArray()))
-                                        @if ($chat->image == null)
-                                            <img src="{{ asset('image/defaultpic.jpg') }}"
-                                                class="w-100 rounded-circle shadow-lg" alt="">
-                                        @else
-                                            <img src="{{ asset('storage/' . $chat->image) }}"
-                                                class="w-100 rounded-circle shadow-lg" alt="">
-                                        @endif
-                                    @endif
-
-                                    @foreach ($block as $b)
-                                        @if ($b->blocked_id == $chat->id)
-                                            <img src="{{ asset('image/defaultpic.jpg') }}"
-                                                class="w-100 rounded-circle shadow-lg" alt="">
-                                        @endif
-                                    @endforeach
-
-                                    @foreach ($blocked as $bd)
-                                        @if ($bd->user_id == $chat->id)
-                                            <img src="{{ asset('image/defaultpic.jpg') }}"
-                                                class="w-100 rounded-circle shadow-lg" alt="">
-                                        @endif
-                                    @endforeach
-
+                {{-- modal for personal infromation end --}}
+                {{-- modal for search message  --}}
+                <div class="modal fade" id="searchMessage" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" style="width: 280px">
+                        <div class="modal-content " >
+                            <div id="contactInfo">
+                                <div class="modal-header border-bottom-0">
+                                    <h5 class="col-6 lightTextClass">Messages</h5>
+                                    <button type="button" class="btn position-absolute mt-2 me-1 top-0 end-0" data-bs-dismiss="modal"
+                                        aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
                                 </div>
-                                @if ($m->text == null && $m->image == null)
-                                    <div class=" col">
-                                        <div
-                                            class="  form-control rounded-5 border-1 border-secondary  bg-secondary p-1 mt-4 text-white-50 text-start d-inline-block ps-4 shadow">
-                                            {{ $chat->name }} removed message
-                                            <div class=" text-end pe-3 text-white-50">
-                                                {{ $m->created_at->format('H:i A') }}
-                                            </div>
-                                        </div>
-                                    </div>
-                                @else
-                                    @if ($m->image == null)
-                                        <div class=" clickToReply col">
-                                            <div
-                                                class=" form-control rounded-5 bg-dark border-0 p-1 mt-4 text-white text-start d-inline-block ps-4 shadow">
-                                                @if ($m->reply_chat_code != null)
-                                                    <div class=" opacity-25 text-end me-3 border-bottom border-2">
-                                                        <i class="fa-solid fa-reply pe-2 pt-3 text-white-50"></i>
-                                                        @foreach ($message as $mg)
-                                                            @if ($mg->chat_code == $m->reply_chat_code)
-                                                                @if ($mg->text == null && $mg->image == null)
-                                                                    <span class=" text-danger">Deleted Message</span>
-                                                                @else
-                                                                    @if ($mg->image != null)
-                                                                        <div class="col-2 offset-1 mb-2">
-                                                                            <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                class="w-100 opacity-50 rounded-2 shadow"
-                                                                                alt="">
-                                                                        </div>
-                                                                    @else
-                                                                        {{ $mg->text }}
-                                                                    @endif
-                                                                @endif
-                                                            @endif
-                                                        @endforeach
 
-                                                    </div>
-                                                @endif
-                                                {{ $m->text }}
-                                                <div class=" text-end pe-3 text-white-50">
-                                                    {{ $m->created_at->format('H:i A') }}
-                                                </div>
-                                            </div>
-                                            <div class="reply text-end" style=" display:none">
-                                                <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                        class="fa-solid fa-reply  opacity-50 text-dark"></i></a>
-                                            </div>
-                                        </div>
-                                    @else
-                                        @if ($m->text == null)
-                                            <div class="clickToReply col">
-                                                <div class="mt-4">
-                                                    @if ($m->reply_chat_code != null)
-                                                        <div class=" opacity-50 text-end me-3 rounded-5 border-2">
-                                                            <i class="fa-solid fa-reply pe-2 pt-3"></i>
-                                                            @foreach ($message as $mg)
-                                                                @if ($mg->chat_code == $m->reply_chat_code)
-                                                                    @if ($mg->text == null && $mg->image == null)
-                                                                        <span class=" text-danger">Deleted
-                                                                            Message</span>
-                                                                    @else
-                                                                        @if ($mg->image != null)
-                                                                            <div class="col-2 offset-1 mb-2">
-                                                                                <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                    class="w-100 opacity-50 rounded-2 shadow"
-                                                                                    alt="">
-                                                                            </div>
-                                                                        @else
-                                                                            {{ $mg->text }}
-                                                                        @endif
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                    <img src="{{ asset('storage/' . $m->image) }}"
-                                                        class="w-100  rounded-4 shadow-lg" alt="">
-                                                </div>
-                                                <div class="reply text-end" style=" display:none">
-                                                    <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-reply  opacity-50 text-dark"></i></a>
-                                                </div>
-                                            </div>
-                                        @else
-                                            <div class="clickToReply col">
-                                                <div
-                                                    class=" form-control rounded-5 bg-dark border-0 p-1 mt-4 text-white text-start d-inline-block ps-4 shadow">
-                                                    @if ($m->reply_chat_code != null)
-                                                        <div class=" opacity-25 text-end me-3 border-bottom border-2">
-                                                            <i class="fa-solid fa-reply pe-2 pt-3 text-white-50"></i>
-                                                            @foreach ($message as $mg)
-                                                                @if ($mg->chat_code == $m->reply_chat_code)
-                                                                    @if ($mg->text == null && $mg->image == null)
-                                                                        <span class=" text-danger">Deleted
-                                                                            Message</span>
-                                                                    @else
-                                                                        @if ($mg->image != null)
-                                                                            <div class="col-2 offset-1 mb-2">
-                                                                                <img src="{{ asset('storage/' . $mg->image) }}"
-                                                                                    class="w-100 opacity-50 rounded-2 shadow"
-                                                                                    alt="">
-                                                                            </div>
-                                                                        @else
-                                                                            {{ $mg->text }}
-                                                                        @endif
-                                                                    @endif
-                                                                @endif
-                                                            @endforeach
-                                                        </div>
-                                                    @endif
-                                                    {{ $m->text }}
-                                                    <div class=" text-end pe-3 text-white-50">
-                                                        {{ $m->created_at->format('H:i A') }}
-                                                    </div>
-                                                </div>
-                                                <div class=" offset-2">
-                                                    <img src="{{ asset('storage/' . $m->image) }}"
-                                                        class="w-100  mt-1 rounded-4 shadow-lg " alt="">
-                                                </div>
-                                                <div class="reply text-end" style=" display:none">
-                                                    <a href="{{ route('chat#chatMessageReply', $m->chat_code) }}"><i
-                                                            class="fa-solid fa-reply  opacity-50 text-dark"></i></a>
-                                                </div>
-                                            </div>
-                                        @endif
-                                    @endif
-                                @endif
+                                <div class="modal-body">
+                                    <form action="{{ route('chat#chatMessageSearch') }}" id="searchMessage" method="get">
+                                        <input type="text" name="searchMessage" class=" form-control bg-light" id="searchMessageInput" placeholder="Search" required>
+                                        <button type="submit" class="d-none"></button>
+                                    </form>
+                                    <div class="displaySearchMessage overflow-y-scroll" style="height: 200px"></div>
+                                </div>
                             </div>
-                        @endif
-                    @endforeach
 
-                </div>
-                {{-- display message end  --}}
-                <div class="col ">
-                    {{-- reply start --}}
-                    <div id="replyText">
-                        @if (isset($reply))
-                            <div class=" container-fluid d-lg-flex"
-                                style=" background-color: rgb(59, 59, 59); height:50px">
-                                <div class="col-1"><i class="fa-solid fa-reply fs-3 pt-3 text-white-50"></i></div>
-                                @if ($reply->text == null)
-                                    <img src="{{ asset('storage/' . $reply->image) }}"
-                                        class=" opacity-50 rounded-2 shadow" alt="">
-                                    <div class="col-9"></div>
-                                @else
-                                    <div class="col-10 pt-3 text-white"> {{ $reply->text }}</div>
-                                @endif
-                                <a href="{{ route('chat#chatMessageReplyCancel', $reply->sec_user_id) }}"
-                                    class="col"><i class="fa-solid fa-xmark text-dark fs-3 pt-3"></i></a>
-                            </div>
-                        @else
-                        @endif
+                        </div>
                     </div>
-                    {{-- reply end  --}}
-                    <!-- message send start -->
-                    @if (
-                        !in_array($chat->id, $block->pluck('blocked_id')->toArray()) &&
-                            !in_array($chat->id, $blocked->pluck('user_id')->toArray()))
-                        <form action="{{ route('chat#chatMessage') }}" method="POST"
-                            class="row py-1 rounded-bottom-4" style=" background-color: rgb(59, 59, 59);"
-                            enctype="multipart/form-data">
-                            @csrf
+                </div>
+                {{-- modal for search message end --}}
+            </header>
+            @if(session('errorchat'))
+                <div class="alert d-flex alert-warning alert-dismissible fade show" role="alert">
+                   <p class="col">{{ session('errorchat') }}</p>
+                    <button type="button" class="close btn col-1" data-bs-dismiss="alert" aria-label="Close">
+                      <span aria-hidden="true">&times;</span>
+                    </button>
+                  </div>
+                @endif
+            @if (count($message) == 0)
+                <div class="d-flex justify-content-center align-items-center opacity-50" style="height: 80vh">
+                <div class="lightTextClass text-center card bg-light border-0 px-5 py-3" >
+                    <p class=" fs-4 opacity-75"><i class="fa-regular fa-paper-plane"></i></p>
+                    <p class=" fw-bold">No messages here yet</p>
+                    <p>Send a message and make some friend</p>
+                </div>
+                </div>
+            @else
+                <article id='scroll' class="display-message overflow-scroll overflow-x-hidden " style="height: 80vh">
 
-                            @if (isset($reply))
-                                <input type="hidden" name="replyCode" value="{{ $reply->chat_code }}">
-                            @endif
+                </article>
+            @endif
+            <footer>
 
-                            <div class="col-1 mt-2">
-                                <button class="  rounded-circle btn btn-dark" id="scrollDown" type="button">
-                                    <i class="fa-solid fa-arrow-down"></i>
-                                </button>
-                            </div>
+                <form enctype="multipart/form-data">
+                    @csrf
+                    <div class="pt-3">
+                        <div class="message-reply offset-1 ">
 
-                            {{-- file upload start  --}}
-                            <div class=" col-1 offset-1 pt-3 d-flex">
-                                <i class="fa-solid fa-bars fs-4 text-white-50 me-3" data-bs-toggle="modal"
-                                    data-bs-target="#staticBackdrop1"></i>
-                                <div class=" btn-group dropup" id="dropup">
-                                    <i class="fa-regular fa-face-smile text-white-50 fs-4" data-toggle="dropdown"
-                                        aria-haspopup="true" aria-expanded="false"></i>
-                                    <div class="dropdown-menu mb-3 bg-dark" id="dropdown-menu">
+                        </div>
+                       <div class="messenge-send">
+                        <div class="d-flex">
+                            <span class="file-attach pt-1 text-center " style="width: 50px"><i class="fa-solid fa-paperclip lightTextClass"
+                                    data-bs-toggle="modal" data-bs-target="#fileUpload"></i>
+                            </span>
+
+                            <input type="hidden" name="firstUser" id="firstUser" value="{{ Auth::user()->id }}">
+                            <input type="hidden" name="secUser" id="secUser" value="{{ $chat->id }}">
+
+                            <div class="input-group col">
+                            <input type="text" name="message" id="message"
+                                placeholder="Write Your Message Here ..."
+                                class="messageInput form-control lightBgClass border-0" required/>
+                               <div class="input-group-text  lightBgClass border-0">
+                                <div class=" btn-group dropup" ><i class="fa-regular fa-face-smile lightTextClass opacity-50"  data-bs-toggle="dropdown"
+                                    aria-haspopup="true" aria-expanded="false"></i>
+                                    <div class="dropdown-menu mb-3 bg-dark GpEmo" id="dropdown-menu">
 
                                         <div class="emoji-picker">
                                             <div class="emoji-container">
@@ -678,220 +378,239 @@
 
                                     </div>
                                 </div>
+                               </div>
                             </div>
-                            {{-- file upload end  --}}
 
-                            <div class="col-6">
-                                <input class="form-control mt-2 text-white w-100 rounded-pill" id="message"
-                                    name="message"
-                                    style="border: 1px solid rgb(92, 92, 92); background-color: rgb(92, 92, 92);"
-                                    type="text" placeholder="Message ..." aria-label="Message ..."
-                                    v-model="message">
-
+                            <div class=" text-center" style="width: 100px">
+                                <span class=" pt-2 px-3"><i
+                                        class="fa-solid fa-microphone voice-icon lightTextClass"></i>
+                                    </span>
+                                <button type="button" id="sendMessageBtn" class=" rounded-circle btn lightBgClass"><i
+                                        class="fa fa-send lightTextClass" aria-hidden="true"></i></button>
+                                <button type="button" id="sendMessageBtn1" class=" rounded-circle btn lightBgClass" style="display: none;"><i
+                                        class="fa fa-send lightTextClass" aria-hidden="true"></i></button>
                             </div>
-                            <input type="hidden" name="firstUser" value="{{ Auth::user()->id }}">
-                            <input type="hidden" name="secUser" value="{{ $chat->id }}">
 
-                            <div class=" col-2 btn">
-                                <button class="btn btn-dark rounded-pill " type="submit">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                </button>
-                            </div>
-                        </form>
-                    @endif
+                        </div>
+                       </div>
+                        <div class="  messenge-voice" style="display: none;">
+                            <input type="file" name="audio" id="audio" class="d-none" accept="audio/*">
 
-                    @foreach ($block as $b)
-                        @foreach ($contact as $c)
-                            @if ($c->user_id == $b->user_id && $c->add_user_id == $b->blocked_id)
-                                @if ($b->blocked_id == $chat->id)
-                                    <div class="row py-3  rounded-bottom-4"
-                                        style=" background-color: rgb(59, 59, 59);">
-                                        <a href="{{ route('chat#unblock', $chat->id) }}"
-                                            class="col-4 offset-4 btn btn-secondary">
-                                            Unblock {{ $chat->name }}
-                                        </a>
-                                    </div>
-                                @endif
-                            @endif
-                        @endforeach
-                    @endforeach
-
-                    @foreach ($blocked as $bd)
-                        @foreach ($contact as $c)
-                            @if ($c->add_user_id == $bd->user_id && $c->user_id == $bd->blocked_id)
-                                @if ($bd->user_id == $chat->id)
-                                    <div class="row py-2 rounded-bottom-4 text-center"
-                                        style=" background-color: rgb(59, 59, 59);">
-                                        <p class=" pt-2 text-white-50">You can't Message this Account</p>
-                                    </div>
-                                @endif
-                            @endif
-                        @endforeach
-                    @endforeach
-
-                    <!-- message send end -->
-                </div>
-            </div>
-            <!-- chat section end  -->
-
-            <!-- detail start  -->
-            <div class="col-md">
-                @if (
-                    !in_array($chat->id, $block->pluck('blocked_id')->toArray()) &&
-                        !in_array($chat->id, $blocked->pluck('user_id')->toArray()))
-                    <div class=" mt-2 rounded-3  overflow-auto" id="detailScroll"
-                        style="background-color: rgb(51, 51, 51); height:87vh">
-                        <div class="px-3 pt-2">
-                            @if ($chat->image == null)
-                                <img src="{{ asset('image/defaultpic.jpg') }}"
-                                    class="w-100 mt-1 rounded-circle shadow-lg" alt="">
-                            @else
-                                <img src="{{ asset('storage/' . $chat->image) }}"
-                                    class="w-100 rounded-circle mt-1 shadow-lg" alt="">
-                            @endif
-                            <div class="text-white fs-5 mt-2 ps-3 mb-2" style=" border-bottom: 1px solid white;">
-                                Info
-                            </div>
-                            <div class=" px-3 pb-3 mt-2" style=" border-bottom: 1px solid grey">
-                                <div class="mt-2">
-                                    <span class=" text-white-50">username</span>
-                                    <h5 class="text-white">{{ $chat->name }}</h5>
-                                </div>
-                                <div class="mt-2">
-                                    <span class=" text-white-50">mobile</span>
-                                    <h5 class="text-white">{{ $chat->phone }}</h5>
-                                </div>
-                                <div class="mt-2">
-                                    <span class=" text-white-50">email</span>
-                                    <h5 class="text-white">{{ $chat->email }}</h5>
-                                </div>
-                                @if ($chat->bio == null)
-                                @else
-                                    <div class="mt-2">
-                                        <span class=" text-white-50">bio</span>
-                                        <h5 class="text-white">{{ $chat->bio }}</h5>
-                                    </div>
-                                @endif
-                            </div>
-                            <div class=" mt-3">
-                                @foreach ($imageOrder as $io)
-                                    <div class=" d-flex" data-bs-toggle="modal"
-                                        data-bs-target="#{{ $io->id }}">
-                                        <div class=" overflow-hidden rounded-3 mb-2" style="height: 150px">
-                                            <img src="{{ asset('storage/' . $io->image) }}"
-                                                class="w-100 rounded  shadow-lg" alt="">
-                                        </div>
-                                    </div>
-
-                                    {{-- Modal for Detail Image  --}}
-                                    <div class="modal fade" id="{{ $io->id }}" data-bs-backdrop="static"
-                                        data-bs-keyboard="false" tabindex="-1" aria-labelledby="staticBackdropLabel"
-                                        aria-hidden="true">
-                                        <div class="modal-dialog modal-dialog-centered">
-                                            <div class="modal-content">
-                                                <div class="modal-header rounded bg-dark border-dark">
-                                                    <img src="{{ asset('storage/' . $io->image) }}"
-                                                        class="w-100 rounded shadow-lg" alt="">
-                                                    <button type="button"
-                                                        class="btn-close position-absolute fs-4 top-0 end-0 mt-4 me-4 "
-                                                        data-bs-dismiss="modal" aria-label="Close"></button>
-                                                </div>
-                                            </div>
-                                        </div>
-                                    </div>
-                                @endforeach
+                        <div class=" d-flex">
+                            <div class=" text-danger  pt-1 text-center back-send"
+                                style="cursor: pointer;width: 70px">
+                                Cancel</div>
+                            <div class=" text-danger pt-1 text-center col audio-stop" style="cursor: pointer;">Stop</div>
+                            <div class=" pt-1" style="width: 70px"><button type="button"
+                                    class=" rounded-circle btn lightBgClass audio-send"><i class="fa fa-send lightTextClass"
+                                        aria-hidden="true"></i></button>
                             </div>
                         </div>
-                    </div>
-                @endif
 
-                @foreach ($block as $b)
-                    @if ($b->blocked_id == $chat->id)
-                        <div class=" mt-2 rounded-3 text-center" id="detailScroll"
-                            style="background-color: rgb(51, 51, 51); height:87vh">
-                            <p class=" text-white-50 pt-5 fs-5">You're not connected this Account</p>
-                        </div>
-                    @endif
-                @endforeach
-
-                @foreach ($blocked as $bd)
-                    @if ($bd->user_id == $chat->id)
-                        <div class=" mt-2 rounded-3 text-center" id="detailScroll"
-                            style="background-color: rgb(51, 51, 51); height:87vh">
-                            <p class=" text-white-50 pt-5 fs-5">You're not connected this Account</p>
-                        </div>
-                    @endif
-                @endforeach
-            </div>
-            <!-- detail end  -->
-
-        </div>
-    </section>
-    <!-- Modal for file upload -->
-    <div class="modal fade" id="staticBackdrop1" data-bs-backdrop="static" data-bs-keyboard="false" tabindex="-1"
-        aria-labelledby="staticBackdropLabel" aria-hidden="true">
-        <div class="modal-dialog modal-dialog-centered">
-            <div class="modal-content">
-                <div class="modal-header bg-dark border-bottom-0">
-                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
-                </div>
-                <form action="{{ route('chat#chatMessage') }}" enctype="multipart/form-data" method="post">
-                    @csrf
-
-                    <input type="hidden" name="firstUser" value="{{ Auth::user()->id }}">
-                    <input type="hidden" name="secUser" value="{{ $chat->id }}">
-
-                    <div class="modal-body bg-dark">
-                        <input type="file" name="image" class="form-control mb-3 text-white-50 w-100 rounded"
-                            style="border: 1px solid rgb(92, 92, 92); background-color: rgb(92, 92, 92);">
-                        <div class="row">
-                            <div class="col-1 btn-group dropup ImageUpload">
-                                <i class="fa-regular fa-face-smile text-white-50 fs-2" style="padding-top: 12px"
-                                    data-toggle="dropdown" aria-haspopup="true" aria-expanded="false"></i>
-                                <div class="dropdown-menu fromImageUpload mb-3 bg-dark">
-
-                                    <div class="emoji-picker1">
-                                        <div class="emoji-container1">
-
-                                        </div>
-                                    </div>
-
-                                </div>
-                            </div>
-                            <div class="col-9 pb-2">
-                                <input class="form-control mt-2 text-white w-100 rounded-pill" id="message1"
-                                    name="message"
-                                    style="border: 1px solid rgb(92, 92, 92); background-color: rgb(92, 92, 92);"
-                                    type="text" placeholder="Message ..." aria-label="Message ..."
-                                    v-model="message">
-                            </div>
-                            <div class="rounded-pill col-2">
-                                <button type="submit" class="btn mt-2 btn-secondary rounded-circle">
-                                    <i class="fa-solid fa-paper-plane"></i>
-                                </button>
-                            </div>
                         </div>
                     </div>
                 </form>
-            </div>
+
+                <!-- Modal for file upload start -->
+                <div class="modal fade" id="fileUpload" data-bs-backdrop="static" data-bs-keyboard="false"
+                    tabindex="-1" aria-labelledby="staticBackdropLabel" aria-hidden="true">
+                    <div class="modal-dialog modal-dialog-centered" style="width: 280px">
+                        <div class="modal-content">
+                            <div class="modal-header border-bottom-0">
+                                <button type="button" class="btn position-absolute top-0 end-0" data-bs-dismiss="modal"
+                                    aria-label="Close"><i class="fa-solid fa-xmark"></i></button>
+                            </div>
+                            <form enctype="multipart/form-data">
+                                @csrf
+
+                                <div class="modal-body">
+                                   <div class="mb-4">
+                                        <input type="file" name="file" id="file"
+                                        class="form-control bg-light border-0 lightTextClass col" />
+                                        <div id="errorFile">
+
+                                        </div>
+                                   </div>
+                                    <div class="d-flex">
+
+                                        <div class="col pb-2">
+                                            <input type="text" name="message" id="message1"
+                                                placeholder="Enter Caption ..."
+                                                class="messageInput1 form-control lightBgClass border-0 col" />
+                                        </div>
+
+                                        <div class="ms-1 text-center" style="width: 50px">
+                                            <button type="button" id="sendFile"  class=" rounded-circle btn lightBgClass"><i
+                                                    class="fa fa-send lightTextClass" aria-hidden="true"></i></button>
+                                            <button type="button" id="sendFile1" style="display: none"  class=" rounded-circle btn lightBgClass"><i
+                                                    class="fa fa-send lightTextClass" aria-hidden="true"></i></button>
+                                        </div>
+
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+                <!-- Modal for file upload end -->
+
+            </footer>
         </div>
-    </div>
+    </main>
+
 </body>
+
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js"
     integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous">
 </script>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.6.4/jquery.min.js"></script>
 
+{{-- sound wave  --}}
+<script src="https://unpkg.com/wavesurfer.js@7"></script>
+<script src="{{ asset('js/chat.js') }}"></script>
+<script src="{{ asset('js/contact.js') }}"></script>
+<script src="{{ asset('js/light_dark.js') }}"></script>
+<script src="{{ asset('js/setting.js') }}"></script>
+
 <script>
     $(document).ready(function() {
+    $(".chat-icon").click(() => {
+        $(".chat-section").fadeIn(1500);
+        $(".chat-icon").css("color", "#536dfe");
+        $(".contact-icon").css("color", "#e0e0e0");
+        $(".group-icon").css("color", "#e0e0e0");
+         $('.moon-icon').css('color','#e0e0e0');
+        $('.sun-icon').css('color','#e0e0e0');
+        $(".setting-icon").css("color", "#e0e0e0");
+        $(".contact-section").css("display", "none");
+        $(".group-section").css("display", "none");
+        $(".setting-section").css("display", "none");
+    });
+    $('.setting-icon').click(() => {
+        $('.setting-section').fadeIn(1500);
+        $('.setting-icon').css('color','#536dfe');
+        $('.group-icon').css('color','#e0e0e0');
+        $('.contact-icon').css('color','#e0e0e0');
+        $('.chat-icon').css('color','#e0e0e0');
+        $('.group-section').css('display','none');
+        $('.moon-icon').css('color','#e0e0e0');
+        $('.sun-icon').css('color','#e0e0e0');
+        $('.contact-section').css('display','none');
+        $('.chat-section').css('display','none');
+    })
+    $(".group-icon").click(() => {
+        $(".group-section").fadeIn(1500);
+        $(".group-icon").css("color", "#536dfe");
+        $(".contact-icon").css("color", "#e0e0e0");
+        $(".chat-icon").css("color", "#e0e0e0");
+        $(".setting-icon").css("color", "#e0e0e0");
+        $(".contact-section").css("display", "none");
+        $(".chat-section").css("display", "none");
+        $('.moon-icon').css('color','#e0e0e0');
+        $('.sun-icon').css('color','#e0e0e0');
+        $(".setting-section").css("display", "none");
+    });
+    $('.contact-icon').click(() => {
+        $('.contact-section').fadeIn(1500);
+        $('.contact-icon').css('color','#536dfe');
+        $('.chat-icon').css('color','#e0e0e0');
+        $('.group-icon').css('color','#e0e0e0');
+        $('.setting-icon').css('color','#e0e0e0');
+        $('.chat-section').css('display','none');
+        $('.group-section').css('display','none');
+        $('.moon-icon').css('color','#e0e0e0');
+        $('.sun-icon').css('color','#e0e0e0');
+        $('.setting-section').css('display','none');
+    })
+
+        $('#searchForAddContact').click((e) => {
+            e.preventDefault();
+            var addEmail = $('#addEmail').val();
+            var addPhone = $('#addPhone').val();
+            var inputData = {
+                addEmail: addEmail,
+                addPhone: addPhone
+            }
+            $.ajax({
+                url: "/contact/search",
+                type: "POST",
+                datatype: "json",
+                headers: {
+                    "X-CSRF-TOKEN": $('#_token').val(),
+                },
+                data: inputData,
+                success: function(res) {
+                    $('.searchedContact').html("");
+
+                    if (res.contact != undefined) {
+                        var contact = res.contact;
+
+                        $('.searchedContact').append(
+                            `
+                <div class="modal-body d-flex mx-4">
+                    <div class="ms-3" style="width: 40px">
+                        ${contact.image == null ? `
+                            <img src="http://localhost:8000/image/defaultpic.jpg"
+                                class="w-100  mt-1 rounded-circle " alt="">
+                        `:`
+                            <img src="http://localhost:8000/storage/${contact.image}"
+                                class="w-100  rounded-circle mt-1 " alt="">
+                        `}
+                    </div>
+                    <div class="col offset-2">
+                        <input type="hidden" name="addUserId" value="${contact.id}"/>
+                        <span class="text-muted fw-bold d-block pt-2 ">${contact.name}</span>
+                    </div>
+                </div>
+                <div class="modal-footer ">
+                    <button type="submit" class=" btn btn-primary col opacity-75">Add</button>
+                </div>
+                    `
+                        );
+
+                    } else {
+                        $('.searchedContact').append(
+                            `
+                    <div class=" modal-body mx-4 text-center">
+                        <p class=" opacity-50">user not found</p>
+                    </div>
+                    <div class="modal-footer ">
+                        <button type="button" class=" btn btn-danger col opacity-75" id="backAddContact">Back</button>
+                    </div>
+                        `
+                        );
+                        $('#backAddContact').click(() => {
+
+                            $('#displaySearchedContact').css('display', 'none');
+                            $('#inputDataForContact').fadeIn();
+                        })
+                    };
+                    $('#inputDataForContact').css('display', 'none');
+                    $('#displaySearchedContact').fadeIn();
+
+                },
+
+            });
+        })
 
         $.ajax({
-            url: '/chat/message/seen',
+            url: '/status/online',
             type: 'GET',
             datatype: 'json',
             data: {
-                'id': $('#id').val(),
+                'status': 'online',
             }
+        })
+
+        $('#stillLogin').click(function() {
+            $.ajax({
+                url: '/status/online',
+                type: 'GET',
+                datatype: 'json',
+                data: {
+                    'status': 'online',
+                }
+            })
         })
 
         $('#signOut').click(function() {
@@ -905,7 +624,50 @@
             })
         })
 
-        var element = document.getElementById("scroll");
+        $('#stillLogin1').click(function() {
+            $('#logout-section').css('display', 'none');
+            $('#profileInformation').fadeIn();
+            $.ajax({
+                url: '/status/online',
+                type: 'GET',
+                datatype: 'json',
+                data: {
+                    'status': 'online',
+                }
+            })
+        })
+
+        $('#signOut1').click(function() {
+            $('#profileInformation').css('display', 'none');
+            $('#logout-section').fadeIn();
+            $.ajax({
+                url: '/status/offline',
+                type: 'GET',
+                datatype: 'json',
+                data: {
+                    'status': 'offline',
+                }
+            })
+        })
+
+        $('#deleteAcc').click(() => {
+            $('#deleteAccModal').modal('show');
+            $('#profileInfo').modal('hide');
+        })
+        $('#closeDeleteAccModal').click(() => {
+            $('#deleteAccModal').modal('hide');
+            $('#profileInfo').modal('show');
+        })
+
+        // from chat page start
+
+        $.ajax({
+            url: `/chat/message/seen/${$("#secUser").val()}`,
+            type: 'GET',
+            datatype: 'json'
+        })
+
+        var element = document.getElementsByClassName("scroll");
         var scrolled = false;
 
         function updateScroll() {
@@ -917,14 +679,6 @@
         if ($('#exceedMember').html()) {
             $('.modalNewGroup').modal("show");
         }
-
-        $(".clickToReply").mouseenter(function() {
-            $(this).find('.reply').delay(400).fadeIn();
-        })
-
-        $(".clickToReply").mouseleave(function() {
-            $(this).find('.reply').delay(300).fadeOut();
-        })
 
         $("#scroll").on('scroll', function() {
             scrolled = true;
@@ -979,7 +733,27 @@
             messageInput.value = currentMessage + emoji;
             messageInput1.value = currentMessage1 + emoji;
         }
-    })
+
+        // from chat page end
+
+        var url = window.location.href;
+        var params = new URLSearchParams(url.split('?')[1]);
+        var paramValue = params.get('search');
+        var paramValue2 = params.get('contact');
+
+        if (paramValue) {
+            $('.modalSearch').modal("show");
+        }
+        if (paramValue2) {
+            $('.modalContact').modal("show");
+            $("#createGP").attr("type", "submit");
+        }
+        if ($('#exceedMember').html()) {
+            $('.modalNewGroup').modal("show");
+        }
+    });
 </script>
 
 </html>
+
+

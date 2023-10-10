@@ -2,14 +2,19 @@
 
 namespace App\Http\Controllers;
 
+use App\Models\Chat;
 use App\Models\User;
 use App\Models\Group;
 use App\Models\Contact;
+use App\Models\Message;
+use App\Models\ChatList;
 use App\Models\BlockChat;
+use App\Models\ChatLists;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Facades\Validator;
 
 class UserController extends Controller
 {
@@ -35,10 +40,16 @@ class UserController extends Controller
 
         $contact = Contact::select('users.*', 'contacts.id','contacts.user_id','contacts.add_user_id')
             ->rightJoin('users', 'contacts.add_user_id', 'users.id')
+            ->when(request('searchContact'), function ($query) {
+                $query->orWhere('users.name', 'like', '%' . request('searchContact') . '%');
+                })
             ->where('contacts.user_id', Auth::user()->id)
             ->get();
 
         $group = Group::where('user_id', Auth::user()->id)
+            ->when(request('searchGroup'), function ($query) {
+                $query->orWhere('group_name', 'like', '%' . request('searchGroup') . '%');
+                })
             ->orwhere('user_id', Auth::user()->id)
             ->orwhere('fir_user_id', Auth::user()->id)
             ->orwhere('sec_user_id', Auth::user()->id)
@@ -59,7 +70,15 @@ class UserController extends Controller
             ->leftJoin('users','block_chats.blocked_id','users.id')
             ->where('block_chats.blocked_id',Auth::user()->id)->get();
 
-        return view('dashboard', compact('people', 'contact', 'group','block','blocked'));
+        $chatlist = ChatLists::select('chat_lists.fir_user_id','chat_lists.sec_user_id','users.*')
+            ->rightJoin('users','chat_lists.sec_user_id','users.id')
+            ->when(request('searchChat'), function ($query) {
+                $query->orWhere('users.name', 'like', '%' . request('searchChat') . '%');
+                })
+            ->where('chat_lists.fir_user_id',Auth::user()->id)
+            ->get();
+
+        return view('dashboard', compact('chatlist','people', 'contact', 'group','block','blocked'));
     }
 
     // direct account page
@@ -89,35 +108,25 @@ class UserController extends Controller
         return view('profile.account', compact('people', 'contact','block','blocked'));
     }
 
-    // update user name
-    public function accountName(Request $request)
+    // account delete
+    public function accountDelete(){
+        User::where('id',Auth::user()->id)->delete();
+    }
+
+    // update user
+    public function accountUpdate(Request $request)
     {
-        User::where('id', Auth::user()->id)->update(['name' => $request->name]);
+        $data = [
+            'name' => $request->name,
+            'email' => $request->email,
+            'phone' => $request->phone,
+            'bio' => $request->bio
+        ];
+        User::where('id', Auth::user()->id)->update($data);
         return back();
     }
 
-    // update user phone
-    public function accountPhone(Request $request)
-    {
-        User::where('id', Auth::user()->id)->update(['phone' => $request->phone]);
-        return back();
-    }
-
-    // update user email
-    public function accountEmail(Request $request)
-    {
-        User::where('id', Auth::user()->id)->update(['email' => $request->email]);
-        return back();
-    }
-
-    // update user bio
-    public function accountBio(Request $request)
-    {
-        User::where('id', Auth::user()->id)->update(['bio' => $request->bio]);
-        return back();
-    }
-
-    // update user bio
+    // update user image
     public function accountImage(Request $request)
     {
         $oldPhotoName = User::select('image')->where('id', Auth::user()->id)->first();
@@ -130,13 +139,11 @@ class UserController extends Controller
         $folderPath = public_path('storage/');
 
         $image_parts = explode(";base64,", $request->image); // data:image/png
-        $image_type_aux = explode("image/", $image_parts[0]);
-        $image_type = $image_type_aux[1];       // png
-        $image_base64 = base64_decode($image_parts[1]);
+        $image_base = base64_decode($image_parts[1]);
 
         $imageName = uniqid() . '.png';
         $imageFullPath = $folderPath . $imageName;
-        file_put_contents($imageFullPath, $image_base64);
+        file_put_contents($imageFullPath, $image_base);
 
         $upload['image'] = $imageName;
 
@@ -145,16 +152,27 @@ class UserController extends Controller
         return response()->json();
     }
 
+    // direct password change page
+    public function passwordChangePage()
+    {
+        return view('profile.pwReset');
+    }
+
     // account change password
     public function passwordChange(Request $request)
     {
+        $request->validate([
+            'oldPassword' => 'required|min:5',
+            'newPassword' => 'required|min:5',
+            'confirmNewPassword' => 'required|min:5|same:newPassword'
+        ]);
         $user = User::where('id', Auth::user()->id)->first();
         $dbPassword = $user->password;
 
         if (Hash::check($request->oldPassword, $dbPassword)) {
             $data = ['password' => Hash::make($request->confirmNewPassword)];
             User::where('id', Auth::user()->id)->update($data);
-            return back()->with(['success' => " You've changed your Password"]);
+            return back();
         }
         return back()->with(['notMatch' => 'The old password does not match! Try again...']);
     }

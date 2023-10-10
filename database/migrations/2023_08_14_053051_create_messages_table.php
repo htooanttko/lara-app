@@ -15,8 +15,11 @@ return new class extends Migration
             $table->id();
             $table->integer('chat_code');
             $table->integer('reply_chat_code')->nullable();
+            $table->longText('reply_mes')->nullable();
             $table->longText('text')->nullable();
             $table->string('image')->nullable();
+            $table->string('audio')->nullable();
+            $table->string('video')->nullable();
             $table->timestamps();
         });
     }

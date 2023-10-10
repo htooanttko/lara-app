@@ -16,7 +16,7 @@ return new class extends Migration
             $table->integer('user_id');
             $table->string('group_name');
             $table->string('group_image')->nullable();
-            $table->integer('fir_user_id');
+            $table->integer('fir_user_id')->nullable();
             $table->integer('sec_user_id')->nullable();
             $table->integer('a_user_id')->nullable();
             $table->integer('b_user_id')->nullable();

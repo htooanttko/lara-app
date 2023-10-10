@@ -13,26 +13,4 @@ Route::middleware('auth:sanctum')->get('/', function (Request $request) {
     return $request->user();
 });
 
-Route::get('/users',function(){
-    $user = User::get();
-    return response()->json([
-        'user'=> $user,
-    ]);
-});
-
-Route::post('/users',function(Request $request){
-    $data = [
-        'name'=> $request->name,
-        'phone' => $request->phone,
-        'email' => $request->email,
-        'password' => Hash::make($request->password),
-    ];
-
-    $user = User::create($data);
-    return response()->json([
-        'user'=> $user,
-    ]);
-});
-
-
 

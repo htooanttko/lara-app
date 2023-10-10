@@ -1,0 +1,19 @@
+@media (max-width: 1600px) {
+    .nav-mobile{
+        display: none;
+    }
+    .backDashboard{
+        display: none;
+    }
+}
+
+@media (max-width: 967px) {
+    .nav-desk , aside{
+        display: none;
+    }
+    .backDashboard{
+        display: inline;
+        margin-top: 16px;
+        padding-left: 20px;
+    }
+}
